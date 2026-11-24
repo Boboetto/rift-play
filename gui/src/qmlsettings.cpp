@@ -11,9 +11,11 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QProcess>
+#include <QDir>
 
 extern "C" {
 #include <libavcodec/avcodec.h>
+#include <chiaki/ffmpegdecoder.h>
 #include <libavutil/hwcontext.h>
 #include <SDL.h>
 }
@@ -32,6 +34,16 @@ static bool codecSupportsHwDevice(enum AVCodecID codec_id, AVHWDeviceType type)
             return true;
     }
 }
+
+#if defined(Q_OS_LINUX)
+static bool v4l2m2mDecoderAvailable()
+{
+    if (!avcodec_find_decoder_by_name("h264_v4l2m2m") || !avcodec_find_decoder_by_name("hevc_v4l2m2m"))
+        return false;
+    // Only offer it when the kernel exposes V4L2 video nodes at all.
+    return !QDir(QStringLiteral("/dev")).entryList({QStringLiteral("video*")}, QDir::System).isEmpty();
+}
+#endif
 
 static bool hwDecoderRuntimeAvailable(const QString &name)
 {
@@ -1706,6 +1718,11 @@ QStringList QmlSettings::availableDecoders() const
         if (allowed.contains(name) && hwDecoderRuntimeAvailable(name))
             out.append(name);
     }
+#if defined(Q_OS_LINUX)
+    // Rift Play: V4L2 mem2mem decoders (Qualcomm Iris/Venus on Snapdragon handhelds).
+    if (v4l2m2mDecoderAvailable())
+        out.append(QStringLiteral(CHIAKI_FFMPEG_DECODER_V4L2M2M));
+#endif
     out.append("auto");
     return out;
 }

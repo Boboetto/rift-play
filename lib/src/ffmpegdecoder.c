@@ -4,6 +4,7 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/pixdesc.h>
 #include <math.h>
+#include <string.h>
 
 static enum AVCodecID chiaki_codec_av_codec_id(ChiakiCodec codec)
 {
@@ -54,7 +55,26 @@ CHIAKI_EXPORT ChiakiErrorCode chiaki_ffmpeg_decoder_init(ChiakiFfmpegDecoder *de
 	avcodec_register_all();
 #endif
 	enum AVCodecID av_codec = chiaki_codec_av_codec_id(codec);
-	decoder->av_codec = avcodec_find_decoder(av_codec);
+	decoder->av_codec = NULL;
+
+	// Rift Play: V4L2 stateful mem2mem decoders (e.g. Qualcomm Iris/Venus on
+	// Snapdragon handhelds running mainline Linux). These are standalone
+	// decoders, not an AVHWDeviceType, so they bypass the hwdevice path and
+	// output regular software frames (NV12/P010) to the renderer.
+	bool use_v4l2m2m = hw_decoder_name && strcmp(hw_decoder_name, CHIAKI_FFMPEG_DECODER_V4L2M2M) == 0;
+	if(use_v4l2m2m)
+	{
+		const char *m2m_name = av_codec == AV_CODEC_ID_H265 ? "hevc_v4l2m2m" : "h264_v4l2m2m";
+		decoder->av_codec = avcodec_find_decoder_by_name(m2m_name);
+		if(decoder->av_codec)
+			CHIAKI_LOGI(log, "Using V4L2 mem2mem hardware decoder \"%s\"", m2m_name);
+		else
+			CHIAKI_LOGW(log, "V4L2 mem2mem decoder \"%s\" not available, falling back to software decoding", m2m_name);
+		hw_decoder_name = NULL;
+	}
+
+	if(!decoder->av_codec)
+		decoder->av_codec = avcodec_find_decoder(av_codec);
 	if(!decoder->av_codec)
 	{
 		CHIAKI_LOGE(log, "%s Codec not available", chiaki_codec_name(codec));
@@ -100,6 +120,18 @@ CHIAKI_EXPORT ChiakiErrorCode chiaki_ffmpeg_decoder_init(ChiakiFfmpegDecoder *de
 		}
 		decoder->codec_context->hw_device_ctx = av_buffer_ref(decoder->hw_device_ctx);
 		CHIAKI_LOGI(log, "Using hardware decoder \"%s\" with pix_fmt=%s", hw_decoder_name, av_get_pix_fmt_name(decoder->hw_pix_fmt));
+	}
+
+	// Rift Play: remote play streams have no B-frames, so never hold frames back for reordering.
+	decoder->codec_context->flags |= AV_CODEC_FLAG_LOW_DELAY;
+	if(!hw_decoder_name && !use_v4l2m2m)
+	{
+		// Software decoding: FFmpeg defaults to a single thread. Slice threading
+		// spreads each frame over several cores without adding frame latency
+		// (frame threading would add N-1 frames of delay).
+		decoder->codec_context->thread_type = FF_THREAD_SLICE;
+		decoder->codec_context->thread_count = CHIAKI_FFMPEG_SW_DECODE_THREADS;
+		CHIAKI_LOGI(log, "Software decoding with %d slice threads", CHIAKI_FFMPEG_SW_DECODE_THREADS);
 	}
 
 	decoder->codec_context->framerate = decoder->synthetic_framerate;

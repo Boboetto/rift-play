@@ -14,6 +14,11 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavutil/rational.h>
 
+/** Pseudo hw decoder name selecting FFmpeg V4L2 mem2mem decoders (Rift Play) */
+#define CHIAKI_FFMPEG_DECODER_V4L2M2M "v4l2m2m"
+/** Slice threads used for software decoding (Rift Play) */
+#define CHIAKI_FFMPEG_SW_DECODE_THREADS 4
+
 typedef struct chiaki_ffmpeg_decoder_t ChiakiFfmpegDecoder;
 
 typedef struct chiaki_ffmpeg_frame_t ChiakiFfmpegFrame;

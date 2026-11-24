@@ -1039,7 +1039,14 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
     {
         session_info.hw_decoder = QString();
 #if defined(Q_OS_LINUX)
-        if(!use_opengl_renderer && availableDecoders.contains("vulkan"))
+        if(availableDecoders.contains(CHIAKI_FFMPEG_DECODER_V4L2M2M))
+        {
+            // Rift Play: on Snapdragon handhelds the V4L2 decoder is the only real
+            // hardware path (Turnip has no Vulkan video, there is no VA-API driver).
+            qCInfo(chiakiGui) << "Auto hw decoder selecting v4l2m2m";
+            session_info.hw_decoder = CHIAKI_FFMPEG_DECODER_V4L2M2M;
+        }
+        else if(!use_opengl_renderer && availableDecoders.contains("vulkan"))
         {
             qCInfo(chiakiGui) << "Auto hw decoder selecting vulkan";
             session_info.hw_decoder = "vulkan";
@@ -1095,6 +1102,11 @@ void QmlBackend::createSession(const StreamSessionConnectInfo &connect_info)
             {
                 qCInfo(chiakiGui) << "Falling back to vaapi";
                 session_info.hw_decoder = "vaapi";
+            }
+            else if(availableDecoders.contains(CHIAKI_FFMPEG_DECODER_V4L2M2M))
+            {
+                qCInfo(chiakiGui) << "Falling back to v4l2m2m";
+                session_info.hw_decoder = CHIAKI_FFMPEG_DECODER_V4L2M2M;
             }
 #elif defined(Q_OS_WIN)
             if(prefer_cuda)

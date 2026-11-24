@@ -1,7 +1,7 @@
 [Desktop Entry]
 Type=Application
-Name=chiaki-ng
-Comment=PlayStation Remote Play Client
+Name=Rift Play
+Comment=Remote play client for Retroid Pocket 6 (chiaki-ng fork)
 Exec=chiaki
 Icon=chiaking
 Categories=Game;Network;RemoteAccess;
