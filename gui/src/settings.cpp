@@ -1055,6 +1055,26 @@ void Settings::SetPsButtonCombo(uint combo)
 	settings.setValue("settings/ps_button_combo", combo);
 }
 
+bool Settings::GetAutoTvBoost() const
+{
+	return settings.value("settings/auto_tv_boost", true).toBool();
+}
+
+void Settings::SetAutoTvBoost(bool enabled)
+{
+	settings.setValue("settings/auto_tv_boost", enabled);
+}
+
+bool Settings::GetWifiSaver() const
+{
+	return settings.value("settings/wifi_saver", false).toBool();
+}
+
+void Settings::SetWifiSaver(bool enabled)
+{
+	settings.setValue("settings/wifi_saver", enabled);
+}
+
 bool Settings::GetAnimatedBackground() const
 {
 	return settings.value("settings/animated_background", true).toBool();

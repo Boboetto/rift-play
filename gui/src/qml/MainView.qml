@@ -212,6 +212,50 @@ Pane {
 
             Item { Layout.fillWidth: true }
 
+            // update pill (portal install or "new version on GitHub" notice)
+            Button {
+                id: updatePill
+                readonly property var up: Chiaki.updater
+                visible: !!up && (up.available || up.updating || up.finished || !!up.error)
+                focusPolicy: Qt.NoFocus
+                Layout.preferredHeight: 48
+                leftPadding: 22
+                rightPadding: 22
+                font.pixelSize: 17
+                font.weight: Font.DemiBold
+                font.capitalization: Font.MixedCase
+                Material.roundedScale: Material.FullScale
+                Material.elevation: 0
+                Material.background: up && up.error ? "#c0392b" : "#8a6cff"
+                Material.foreground: "white"
+                text: {
+                    if (!up)
+                        return "";
+                    if (up.finished)
+                        return qsTr("Restart to finish update");
+                    if (up.updating)
+                        return qsTr("Updating… %1%").arg(up.progress);
+                    if (up.error)
+                        return qsTr("Update failed");
+                    if (up.latestVersion)
+                        return qsTr("Update to v%1").arg(up.latestVersion);
+                    return qsTr("Update available");
+                }
+                onClicked: {
+                    if (up.finished) {
+                        Qt.quit();
+                    } else if (up.error) {
+                        root.showInfoDialog(qsTr("Update failed"), up.error);
+                    } else if (up.canInstall) {
+                        if (!up.updating)
+                            root.showConfirmDialog(qsTr("Update Rift Play"), qsTr("Download and install the new version now?\nYou can keep using the app while it downloads."), () => up.install());
+                    } else {
+                        root.showInfoDialog(qsTr("New version available"),
+                            qsTr("Rift Play v%1 is available.\n\nTo get automatic updates, install Rift Play once from the update repository (Desktop Mode → Konsole):\n\nflatpak install --user https://boboetto.github.io/rift-play/io.github.riftplay.RiftPlay.flatpakref\n\nAfter that, updates install from this button.").arg(up.latestVersion));
+                    }
+                }
+            }
+
             TopBarButton {
                 visible: !!Chiaki.settings.psnAuthToken
                 iconSource: "qrc:/icons/r1.svg"

@@ -87,6 +87,7 @@ Item {
     StackView.onDeactivated: Chiaki.window.keepVideo = false
 
     Component.onCompleted: {
+        applyTvBoost();
         updateSeparateMenuGeometry();
         updateOverlayInteractionActive();
         Chiaki.window.setStatsOverlayActive(streamStatsVisible);
@@ -624,7 +625,7 @@ Item {
 
             ToolButton {
                 id: defaultButton
-                text: qsTr("Default")
+                text: qsTr("Battery")
                 padding: 10
                 checkable: true
                 checked: Chiaki.window.videoPreset == ChiakiWindow.VideoPreset.Default
@@ -645,7 +646,7 @@ Item {
 
             ToolButton {
                 id: highQualityButton
-                text: qsTr("High Quality")
+                text: qsTr("Balanced")
                 padding: 10
                 checkable: true
                 checked: Chiaki.window.videoPreset == ChiakiWindow.VideoPreset.HighQuality
@@ -661,7 +662,7 @@ Item {
 
             ToolButton {
                 id: highQualitySpatialButton
-                text: qsTr("HQ + Spatial")
+                text: qsTr("Sharp")
                 padding: 10
                 checkable: true
                 checked: Chiaki.window.videoPreset == ChiakiWindow.VideoPreset.HighQualitySpatial
@@ -677,7 +678,7 @@ Item {
 
             ToolButton {
                 id: highQualityAdvancedSpatialButton
-                text: qsTr("HQ + Adv Spatial")
+                text: qsTr("Max / TV")
                 padding: 10
                 checkable: true
                 checked: Chiaki.window.videoPreset == ChiakiWindow.VideoPreset.HighQualityAdvancedSpatial
@@ -1328,6 +1329,16 @@ Item {
             autoClose.stop();
             view.releaseInput();
         }
+        readonly property var qualityCycle: [ChiakiWindow.VideoPreset.Default, ChiakiWindow.VideoPreset.HighQuality, ChiakiWindow.VideoPreset.HighQualitySpatial, ChiakiWindow.VideoPreset.HighQualityAdvancedSpatial]
+        readonly property var qualityNames: [qsTr("Battery"), qsTr("Balanced"), qsTr("Sharp"), qsTr("Max / TV")]
+        function cycleQuality() {
+            let i = qualityCycle.indexOf(Chiaki.window.videoPreset);
+            i = (i + 1) % qualityCycle.length;
+            Chiaki.window.videoPreset = qualityCycle[i];
+            Chiaki.settings.videoPreset = qualityCycle[i];
+            qbToast.show(qsTr("Picture: %1").arg(qualityNames[i]));
+            autoClose.restart();
+        }
         function tap(mask, closeAfter) {
             if (Chiaki.session)
                 Chiaki.session.TapButton(mask);
@@ -1388,12 +1399,57 @@ Item {
                     QuickButton { id: qbPs; label: "PS"; caption: qsTr("Home"); big: true; onTriggered: quickBar.tap(32768, true); KeyNavigation.right: qbCreate }
                     QuickButton { id: qbCreate; label: "\u25A4"; caption: qsTr("Create"); onTriggered: quickBar.tap(8192, false); KeyNavigation.left: qbPs; KeyNavigation.right: qbOptions }
                     QuickButton { id: qbOptions; label: "\u2261"; caption: qsTr("Options"); onTriggered: quickBar.tap(4096, false); KeyNavigation.left: qbCreate; KeyNavigation.right: qbTouch }
-                    QuickButton { id: qbTouch; label: "\u25AD"; caption: qsTr("Touchpad"); onTriggered: quickBar.tap(16384, false); KeyNavigation.left: qbOptions; KeyNavigation.right: qbClose }
-                    QuickButton { id: qbClose; label: "\u2715"; caption: qsTr("Close"); KeyNavigation.left: qbTouch; onTriggered: quickBar.hide() }
+                    QuickButton { id: qbTouch; label: "\u25AD"; caption: qsTr("Touchpad"); onTriggered: quickBar.tap(16384, false); KeyNavigation.left: qbOptions; KeyNavigation.right: qbQuality }
+                    QuickButton { id: qbQuality; label: "HD"; caption: qsTr("Picture"); onTriggered: quickBar.cycleQuality(); KeyNavigation.left: qbTouch; KeyNavigation.right: qbClose }
+                    QuickButton { id: qbClose; label: "\u2715"; caption: qsTr("Close"); KeyNavigation.left: qbQuality; onTriggered: quickBar.hide() }
                 }
             }
         }
     }
+
+    // small toast used by the quick bar (e.g. "Picture: Sharp")
+    Rectangle {
+        id: qbToast
+        z: 1001
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: parent.height - height - 60
+        width: qbToastLabel.implicitWidth + 48
+        height: 52
+        radius: 26
+        color: Qt.rgba(0.06, 0.05, 0.13, 0.9)
+        opacity: 0
+        visible: opacity > 0
+        function show(text) {
+            qbToastLabel.text = text;
+            opacity = 1;
+            qbToastTimer.restart();
+        }
+        Behavior on opacity { NumberAnimation { duration: 200 } }
+        Label {
+            id: qbToastLabel
+            anchors.centerIn: parent
+            font.pixelSize: 20
+            font.weight: Font.DemiBold
+            color: "white"
+        }
+        Timer {
+            id: qbToastTimer
+            interval: 1800
+            onTriggered: qbToast.opacity = 0
+        }
+    }
+
+    // Rift Play: on a 4K output (TV via USB-C) switch to the strongest upscaler
+    // automatically; back to the saved preset on the built-in screen.
+    readonly property bool tvOutput: view.height * Screen.devicePixelRatio >= 1600
+    function applyTvBoost() {
+        if (!Chiaki.settings.autoTvBoost || Chiaki.settings.videoPreset === ChiakiWindow.VideoPreset.Custom)
+            return;
+        const target = tvOutput ? ChiakiWindow.VideoPreset.HighQualityAdvancedSpatial : Chiaki.settings.videoPreset;
+        if (Chiaki.window.videoPreset !== target)
+            Chiaki.window.videoPreset = target;
+    }
+    onTvOutputChanged: applyTvBoost()
 
     component QuickButton: Item {
         id: qb

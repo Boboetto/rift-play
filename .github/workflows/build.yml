@@ -9,10 +9,19 @@ on:
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
+
+env:
+  APP_ID: io.github.riftplay.RiftPlay
+  REPO_URL: https://boboetto.github.io/rift-play/repo/
 
 jobs:
   flatpak-aarch64:
     runs-on: ubuntu-24.04-arm
+    env:
+      IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
+      HAS_KEY: ${{ secrets.FLATPAK_GPG_KEY_ID != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,6 +37,17 @@ jobs:
           flatpak install --user -y --noninteractive flathub \
             org.kde.Sdk//6.11 org.kde.Platform//6.11 io.qt.qtwebengine.BaseApp//6.11
 
+      - name: Import signing key
+        if: env.HAS_KEY == 'true'
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.FLATPAK_GPG_PRIVATE_KEY }}
+        run: |
+          export GNUPGHOME="$RUNNER_TEMP/gnupg"
+          mkdir -p "$GNUPGHOME" && chmod 700 "$GNUPGHOME"
+          printf '%s' "$GPG_PRIVATE_KEY" | gpg --batch --import
+          echo "GNUPGHOME=$GNUPGHOME" >> "$GITHUB_ENV"
+          echo "GPG_ARGS=--gpg-sign=${{ secrets.FLATPAK_GPG_KEY_ID }} --gpg-homedir=$GNUPGHOME" >> "$GITHUB_ENV"
+
       - name: Cache flatpak-builder modules
         uses: actions/cache@v4
         with:
@@ -38,13 +58,19 @@ jobs:
 
       - name: Build
         run: |
-          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+          flatpak-builder --user --force-clean --disable-rofiles-fuse $GPG_ARGS \
             --state-dir="$RUNNER_TEMP/fb-state" --repo="$RUNNER_TEMP/repo" \
             "$RUNNER_TEMP/build-dir" flatpak/io.github.riftplay.RiftPlay.yaml
+          flatpak build-update-repo $GPG_ARGS --generate-static-deltas \
+            --title="Rift Play" "$RUNNER_TEMP/repo"
 
       - name: Bundle
         run: |
-          flatpak build-bundle "$RUNNER_TEMP/repo" RiftPlay-aarch64.flatpak io.github.riftplay.RiftPlay \
+          # bundles carry the update repo URL + key, so installs from a bundle
+          # also get updates through `flatpak update`
+          KEY_ARGS=""
+          if [ -f flatpak/riftplay.gpg ]; then KEY_ARGS="--gpg-keys=flatpak/riftplay.gpg --repo-url=$REPO_URL"; fi
+          flatpak build-bundle $KEY_ARGS "$RUNNER_TEMP/repo" RiftPlay-aarch64.flatpak "$APP_ID" \
             --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
 
       - name: Upload artifact
@@ -55,10 +81,63 @@ jobs:
           if-no-files-found: error
 
       - name: Publish release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: env.IS_RELEASE == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release upload "${GITHUB_REF_NAME}" RiftPlay-aarch64.flatpak --clobber \
             || gh release create "${GITHUB_REF_NAME}" RiftPlay-aarch64.flatpak \
                  --title "Rift Play ${GITHUB_REF_NAME}" --notes-file RELEASE_NOTES.md
+
+      - name: Prepare update repository site
+        if: env.IS_RELEASE == 'true' && env.HAS_KEY == 'true'
+        run: |
+          mkdir -p site
+          cp -r "$RUNNER_TEMP/repo" site/repo
+          KEY=$(cat flatpak/riftplay.gpg.b64)
+          cat > site/$APP_ID.flatpakref <<EOF
+          [Flatpak Ref]
+          Name=$APP_ID
+          Branch=master
+          Title=Rift Play
+          Url=$REPO_URL
+          SuggestRemoteName=riftplay
+          RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
+          IsRuntime=false
+          GPGKey=$KEY
+          EOF
+          cat > site/riftplay.flatpakrepo <<EOF
+          [Flatpak Repo]
+          Title=Rift Play
+          Url=$REPO_URL
+          Homepage=https://github.com/Boboetto/rift-play
+          GPGKey=$KEY
+          EOF
+          sed -i 's/^          //' site/*.flatpakref site/*.flatpakrepo
+          cat > site/index.html <<'EOF'
+          <!doctype html><meta charset="utf-8"><title>Rift Play updates</title>
+          <body style="font-family:sans-serif;background:#0b0a1d;color:#eee;max-width:640px;margin:40px auto;padding:0 16px">
+          <h1>Rift Play</h1><p>Flatpak update repository for Rift Play (aarch64).</p>
+          <pre style="background:#1b1838;padding:12px;border-radius:8px;white-space:pre-wrap">flatpak install --user https://boboetto.github.io/rift-play/io.github.riftplay.RiftPlay.flatpakref</pre>
+          <p><a style="color:#b48cff" href="https://github.com/Boboetto/rift-play">github.com/Boboetto/rift-play</a></p></body>
+          EOF
+          touch site/.nojekyll
+
+      - name: Upload Pages artifact
+        if: env.IS_RELEASE == 'true' && env.HAS_KEY == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy-updates:
+    needs: flatpak-aarch64
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy update repository to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true

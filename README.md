@@ -91,15 +91,6 @@ flatpak build-bundle --arch=aarch64 repo RiftPlay-aarch64.flatpak io.github.rift
 
 ---
 
-## 🇮🇹 In breve
-
-Rift Play è un client Remote Play per PS5/PS4 ottimizzato per la **Retroid Pocket 6 con ArmadaOS**:
-decodifica video hardware sullo Snapdragon, decodifica software multithread a bassa latenza,
-e in arrivo upscaling di qualità e una nuova interfaccia pensata per la console.
-Si installa accanto al chiaki-ng di Flathub senza toccarlo. Istruzioni di installazione qui sopra.
-
----
-
 ## Credits & license
 
 Rift Play is a fork of [**chiaki-ng**](https://github.com/chiaki-ng/chiaki-ng) by Street Pea and

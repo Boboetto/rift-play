@@ -897,6 +897,28 @@ void QmlSettings::setPsButtonCombo(uint combo)
     emit psButtonComboChanged();
 }
 
+bool QmlSettings::autoTvBoost() const
+{
+    return settings->GetAutoTvBoost();
+}
+
+void QmlSettings::setAutoTvBoost(bool enabled)
+{
+    settings->SetAutoTvBoost(enabled);
+    emit autoTvBoostChanged();
+}
+
+bool QmlSettings::wifiSaver() const
+{
+    return settings->GetWifiSaver();
+}
+
+void QmlSettings::setWifiSaver(bool enabled)
+{
+    settings->SetWifiSaver(enabled);
+    emit wifiSaverChanged();
+}
+
 bool QmlSettings::animatedBackground() const
 {
     return settings->GetAnimatedBackground();

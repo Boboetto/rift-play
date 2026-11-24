@@ -20,6 +20,8 @@ if(WIN32)
 endif()
 
 set(SOURCE_FILES
+	include/riftupdater.h
+	src/riftupdater.cpp
 	include/exception.h
 	src/main.cpp
 	include/discoverymanager.h

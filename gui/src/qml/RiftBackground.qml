@@ -73,7 +73,6 @@ Item {
 
             SequentialAnimation on y {
                 running: sys.running
-                paused: sys.paused
                 loops: Animation.Infinite
                 NumberAnimation { from: ribbon.baseY - ribbon.amp; to: ribbon.baseY + ribbon.amp; duration: ribbon.modelData[3] / 2; easing.type: Easing.InOutSine }
                 NumberAnimation { from: ribbon.baseY + ribbon.amp; to: ribbon.baseY - ribbon.amp; duration: ribbon.modelData[3] / 2; easing.type: Easing.InOutSine }

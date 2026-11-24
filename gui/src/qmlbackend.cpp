@@ -1,4 +1,5 @@
 #include "qmlbackend.h"
+#include "riftupdater.h"
 #include "qmlsettings.h"
 #include "qmlmainwindow.h"
 #include "streamsession.h"
@@ -288,6 +289,8 @@ QmlBackend::QmlBackend(Settings *settings, QmlMainWindow *window)
     , settings_qml(new QmlSettings(settings, this))
     , window(window)
 {
+    rift_updater = new RiftUpdater(this);
+    rift_updater->start();
     qt_msg_handler = qInstallMessageHandler(msg_handler);
 
     const char *uri = "org.streetpea.chiaking";
@@ -554,6 +557,11 @@ QmlMainWindow *QmlBackend::qmlWindow() const
 QmlSettings *QmlBackend::qmlSettings() const
 {
     return settings_qml;
+}
+
+QObject *QmlBackend::updater() const
+{
+    return rift_updater;
 }
 
 StreamSession *QmlBackend::qmlSession() const

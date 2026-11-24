@@ -782,11 +782,59 @@ DialogView {
                                 onToggled: Chiaki.settings.animatedBackground = !Chiaki.settings.animatedBackground
                                 KeyNavigation.priority: KeyNavigation.BeforeItem
                                 KeyNavigation.up: touchQuickBar
-                                KeyNavigation.down: animatedBackground
+                                KeyNavigation.down: wifiSaver
                             }
                             Label {
                                 Layout.alignment: Qt.AlignRight
                                 text: qsTr("(flowing particles on the home screen)")
+                            }
+                        }
+                        RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("Wi-Fi Saver")
+                            }
+                            C.CheckBox {
+                                id: wifiSaver
+                                checked: Chiaki.settings.wifiSaver
+                                onToggled: {
+                                    const on = !Chiaki.settings.wifiSaver;
+                                    Chiaki.settings.wifiSaver = on;
+                                    // 720p stream upscaled on the GPU, or back to native 1080p
+                                    Chiaki.settings.resolutionLocalPS5 = on ? 3 : 4;
+                                    Chiaki.settings.bitrateLocalPS5 = 0;
+                                    Chiaki.settings.videoPreset = on ? ChiakiWindow.VideoPreset.HighQualitySpatial : ChiakiWindow.VideoPreset.HighQuality;
+                                    Chiaki.window.videoPreset = Chiaki.settings.videoPreset;
+                                }
+                                KeyNavigation.priority: KeyNavigation.BeforeItem
+                                KeyNavigation.up: animatedBackground
+                                KeyNavigation.down: autoTvBoost
+                            }
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("(720p stream + GPU upscaling to 1080p: smoother on weak Wi-Fi)")
+                            }
+                        }
+                        RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("TV Quality Boost")
+                            }
+                            C.CheckBox {
+                                id: autoTvBoost
+                                checked: Chiaki.settings.autoTvBoost
+                                onToggled: Chiaki.settings.autoTvBoost = !Chiaki.settings.autoTvBoost
+                                KeyNavigation.priority: KeyNavigation.BeforeItem
+                                KeyNavigation.up: wifiSaver
+                                KeyNavigation.down: autoTvBoost
+                            }
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("(use Max / TV upscaling automatically on a 4K display)")
                             }
                         }
                     }
@@ -999,7 +1047,7 @@ DialogView {
 
                     C.ComboBox {
                         Layout.preferredWidth: 520
-                        model: [qsTr("Fast"), qsTr("Default"), qsTr("High Quality"), qsTr("High Quality + Spatial Upscaling"), qsTr("High Quality + Advanced Spatial Upscaling"), qsTr("Custom")]
+                        model: [qsTr("Fastest (lowest power)"), qsTr("Battery"), qsTr("Balanced (default)"), qsTr("Sharp (FSR / FSRCNNX upscaling)"), qsTr("Max / TV (advanced FSRCNNX upscaling)"), qsTr("Custom")]
                         currentIndex: Chiaki.settings.videoPreset
                         onActivated: (index) => {
                             Chiaki.settings.videoPreset = index;
