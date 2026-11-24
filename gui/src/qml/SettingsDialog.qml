@@ -766,7 +766,7 @@ DialogView {
                             }
                             Label {
                                 Layout.alignment: Qt.AlignRight
-                                text: qsTr("(tap top-center of the screen while streaming)")
+                                text: qsTr("(swipe down from the top of the screen while streaming)")
                             }
                         }
                     }

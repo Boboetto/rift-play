@@ -225,7 +225,8 @@ class StreamSession : public QObject
 		ChiakiControllerState keyboard_state;
 		ChiakiControllerState touch_state;
 		QMap<int, uint8_t> touch_tracker;
-		QSet<int> quick_bar_touch_ids;
+		QMap<int, float> quick_bar_swipes; // touch id -> start y (normalized), for swipes from the top edge
+		QSet<int> quick_bar_consumed_ids;  // touches already used for the gesture, ignored until released
 		uint32_t ps_button_combo_mask = 0;
 		bool touch_quick_bar_enabled = true;
 		int8_t mouse_touch_id;
@@ -401,7 +402,7 @@ class StreamSession : public QObject
 		void AutoRegistSucceeded(const ChiakiRegisteredHost &host);
 		void NicknameReceived(QString nickname);
 		void ConnectedChanged();
-		/** Rift Play: user tapped the top-center edge of the touch screen */
+		/** Rift Play: user swiped down from the top edge of the touch screen */
 		void QuickBarRequested();
 		void MeasuredBitrateChanged();
 		void AveragePacketLossChanged();

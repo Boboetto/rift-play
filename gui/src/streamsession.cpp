@@ -1031,13 +1031,23 @@ void StreamSession::HandleTouchEvent(QTouchEvent *event, qreal width, qreal heig
 				float norm_x = std::clamp(0.0, touchPoint.scenePosition().x() / width, 1.0);
 				float norm_y = std::clamp(0.0, touchPoint.scenePosition().y() / height, 1.0);
 
-				// Rift Play: a touch starting on the top-center edge opens the quick bar instead of the touchpad
-				if(quick_bar_touch_ids.contains(id))
+				// Rift Play: swipe down from the top edge opens the quick bar (not sent to the touchpad)
+				if(quick_bar_consumed_ids.contains(id))
 					break;
 				if(touch_quick_bar_enabled && touchPoint.state() == QEventPoint::State::Pressed
-					&& norm_y <= 0.06 && norm_x >= 0.35 && norm_x <= 0.65)
+					&& norm_y <= 0.05 && norm_x >= 0.15 && norm_x <= 0.85)
 				{
-					quick_bar_touch_ids.insert(id);
+					quick_bar_swipes.insert(id, norm_y);
+					break;
+				}
+				if(quick_bar_swipes.contains(id))
+				{
+					if(norm_y - quick_bar_swipes.value(id) >= 0.10)
+					{
+						quick_bar_swipes.remove(id);
+						quick_bar_consumed_ids.insert(id);
+						emit QuickBarRequested();
+					}
 					break;
 				}
 
@@ -1069,11 +1079,8 @@ void StreamSession::HandleTouchEvent(QTouchEvent *event, qreal width, qreal heig
 			}
 			case QEventPoint::State::Released:
 			{
-				if(quick_bar_touch_ids.remove(id))
-				{
-					emit QuickBarRequested();
+				if(quick_bar_swipes.remove(id) || quick_bar_consumed_ids.remove(id))
 					break;
-				}
 				for(auto it=touch_tracker.begin(); it!=touch_tracker.end(); it++)
 				{
 					if(it.key() == id)

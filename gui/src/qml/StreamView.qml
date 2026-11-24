@@ -1304,7 +1304,7 @@ Item {
     }
 
     // ---------- Rift Play: touch quick bar ----------
-    // Tap the top-center edge of the screen while streaming to get the
+    // Swipe down from the top edge of the screen while streaming to get the
     // buttons a handheld lacks (PS, Create, Options, touchpad click).
     Item {
         id: quickBar
@@ -1346,25 +1346,6 @@ Item {
             id: autoClose
             interval: 6000
             onTriggered: quickBar.hide()
-        }
-
-        // discoverability handle
-        Rectangle {
-            id: qbHandle
-            anchors.horizontalCenter: parent.horizontalCenter
-            y: 8
-            width: 120
-            height: 6
-            radius: 3
-            color: "white"
-            visible: !quickBar.open
-            opacity: hintTimer.running ? 0.7 : 0.18
-            Behavior on opacity { NumberAnimation { duration: 800 } }
-            Timer {
-                id: hintTimer
-                interval: 6000
-                running: quickBar.available
-            }
         }
 
         // dim the stream slightly while open (and close on tap outside)
