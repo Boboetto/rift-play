@@ -75,7 +75,7 @@ int real_main(int argc, char *argv[])
 
 	QGuiApplication::setOrganizationName("Chiaki");
 	QGuiApplication::setApplicationName("Chiaki");
-	QGuiApplication::setApplicationVersion(CHIAKI_VERSION);
+	QGuiApplication::setApplicationVersion(RIFTPLAY_VERSION);
 	QGuiApplication::setApplicationDisplayName("Rift Play");
 #if defined(Q_OS_MACOS)
 	// Use a plain CAMetalLayer for Vulkan windows. Qt's own layer presents in step with each

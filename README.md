@@ -15,6 +15,8 @@
   <img alt="License" src="https://img.shields.io/badge/license-AGPL--3.0-blue?style=for-the-badge">
 </p>
 
+<p align="center"><img src="docs/riftplay-home.png" width="820" alt="Rift Play home screen"></p>
+
 > **Status: early / experimental.** The first builds are being tested on real hardware right now.
 > Feedback and logs are very welcome in [Issues](../../issues).
 
@@ -35,6 +37,8 @@ Rift Play is a remote play client built specifically for that combination.
 | Software decoding | 1 thread | multithreaded (slice threads, no extra latency) |
 | Decode latency | default | low-delay mode, no frame reordering buffer |
 | CPU tuning | generic ARMv8 | tuned for Snapdragon 8 Gen 2 (Cortex‑X3/A715) |
+| PS button on handhelds | — | ✅ Select+Start combo · swipe-down touch bar |
+| Home screen | list view | ✅ console-style launcher |
 | Installs alongside the Flathub version | — | ✅ separate app ID |
 
 ### Roadmap
@@ -43,7 +47,8 @@ Rift Play is a remote play client built specifically for that combination.
 - [x] Multithreaded, low-latency software fallback
 - [ ] Verified on RP6 + ArmadaOS (in progress)
 - [ ] High quality upscaling: 720p stream → 1080p screen, 1080p → 4K over USB‑C/TV out
-- [ ] New handheld‑first interface designed around the RP6 controls
+- [x] New console-style home screen designed around the RP6 controls
+- [x] PS button: Select+Start combo and swipe-down touch quick bar
 - [ ] 120 Hz presentation tuning for the RP6 panel
 
 ---

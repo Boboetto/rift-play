@@ -3187,7 +3187,7 @@ DialogView {
                     text: "<h1>Rift Play</h1> by Boboetto, version %1
                         <p>Remote play client for the Retroid Pocket 6 on ArmadaOS.<br>
                         github.com/Boboetto/rift-play</p>
-                        <h2>Fork of chiaki-ng</h2> by Street Pea, based on v1.10.1
+                        <h2>Fork of chiaki-ng</h2> by Street Pea, based on chiaki-ng v1.10.1
                         <h2>Based on Chiaki</h2> by Florian Markl at version 2.1.1
 
                         <p>This program is free software: you can redistribute it and/or modify

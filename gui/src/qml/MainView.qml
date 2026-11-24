@@ -115,23 +115,28 @@ Pane {
             GradientStop { position: 1.0; color: "#050409" }
         }
 
-        // soft ambient glows, tinted by the selected console's state
+        // soft ambient glows (radial-gradient images, slowly breathing)
         Repeater {
-            model: 3
-            Rectangle {
-                readonly property real s: [0.9, 0.65, 0.5][index]
-                width: consolePane.width * s
+            model: [
+                { src: "violet", s: 1.15, x: -0.25, y: -0.55, o: 0.32 },
+                { src: "cyan",   s: 0.85, x: 0.55,  y: -0.45, o: 0.22 },
+                { src: "pink",   s: 0.75, x: 0.05,  y: 0.45,  o: 0.16 }
+            ]
+            Image {
+                required property var modelData
+                required property int index
+                source: "qrc:/icons/riftplay-glow-" + modelData.src + ".svg"
+                width: consolePane.width * modelData.s
                 height: width
-                radius: width / 2
-                x: [consolePane.width * -0.15, consolePane.width * 0.55, consolePane.width * 0.2][index]
-                y: [consolePane.height * -0.45, consolePane.height * -0.25, consolePane.height * 0.55][index]
-                color: [consolePane.accentB, consolePane.accentA, consolePane.accentC][index]
-                opacity: 0.07
-                Behavior on x { NumberAnimation { duration: 1200; easing.type: Easing.InOutSine } }
+                sourceSize: Qt.size(256, 256)
+                smooth: true
+                x: consolePane.width * modelData.x
+                y: consolePane.height * modelData.y
+                opacity: modelData.o
                 SequentialAnimation on opacity {
                     loops: Animation.Infinite
-                    NumberAnimation { to: 0.11; duration: 4000 + index * 900; easing.type: Easing.InOutSine }
-                    NumberAnimation { to: 0.05; duration: 4000 + index * 900; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: modelData.o * 1.35; duration: 4500 + index * 900; easing.type: Easing.InOutSine }
+                    NumberAnimation { to: modelData.o * 0.75; duration: 4500 + index * 900; easing.type: Easing.InOutSine }
                 }
             }
         }
@@ -148,7 +153,7 @@ Pane {
             sourceSize: Qt.size(width, height)
             source: "qrc:/icons/chiaking-logo-white.svg"
             fillMode: Image.PreserveAspectFit
-            opacity: 0.035
+            opacity: 0.025
         }
     }
 
@@ -557,8 +562,16 @@ Pane {
             }
             spacing: 34
 
-            Hint { glyph: root.controllerButton("cross"); text: qsTr("Play"); visible: consolePane.selectedHost !== null }
-            Hint { glyph: root.controllerButton("pyramid"); text: qsTr("Wake up"); visible: consolePane.selectedHost !== null }
+            Hint {
+                glyph: root.controllerButton("cross")
+                text: consolePane.selectedHost && !consolePane.selectedHost.registered && !consolePane.selectedHost.duid ? qsTr("Register") : qsTr("Play")
+                visible: consolePane.selectedHost !== null
+            }
+            Hint {
+                glyph: root.controllerButton("pyramid")
+                text: qsTr("Wake up")
+                visible: !!(consolePane.selectedHost && consolePane.selectedHost.registered && !consolePane.selectedHost.duid && !consolePane.selectedHost.discovered)
+            }
             Hint { glyph: "qrc:/icons/options.svg"; text: qsTr("Settings") }
             Hint { glyph: "qrc:/icons/r3.svg"; text: qsTr("Add console") }
             Hint { glyph: "qrc:/icons/l3.svg"; text: qsTr("Add to Steam"); visible: typeof Chiaki.createSteamShortcut === "function" }
@@ -608,17 +621,24 @@ Pane {
         Material.foreground: primary ? "#0b0a1d" : "white"
         Material.elevation: 0
 
-        Image {
+        Rectangle {
             visible: !!ab.glyph
             anchors {
                 left: parent.left
-                leftMargin: 22
+                leftMargin: 18
                 verticalCenter: parent.verticalCenter
             }
-            width: 26
-            height: 26
-            sourceSize: Qt.size(52, 52)
-            source: ab.glyph
+            width: 34
+            height: 34
+            radius: 17
+            color: ab.primary ? "#0b0a1d" : "transparent"
+            Image {
+                anchors.centerIn: parent
+                width: 26
+                height: 26
+                sourceSize: Qt.size(52, 52)
+                source: ab.glyph
+            }
         }
     }
 
