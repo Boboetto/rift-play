@@ -1,0 +1,273 @@
+app-id: io.github.riftplay.RiftPlay
+runtime: org.kde.Platform
+runtime-version: '6.11'
+sdk: org.kde.Sdk
+base: io.qt.qtwebengine.BaseApp
+base-version: '6.11'
+command: chiaki
+rename-icon: chiaking
+rename-desktop-file: chiaking.desktop
+separate-locales: false
+finish-args:
+  - --share=network
+  - --share=ipc
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=all
+  - --allow=bluetooth
+  - --socket=pulseaudio
+  - --env=QTWEBENGINEPROCESS_PATH=/app/bin/QtWebEngineProcess
+  - --env=LD_LIBRARY_PATH=/app/lib:/app/lib64
+  - --env=DBUS_FATAL_WARNINGS=0
+  - --env=QML_DISABLE_DISK_CACHE=1
+  - --env=SDL_AUDIODRIVER=pipewire
+  - --talk-name=org.freedesktop.ScreenSaver
+  - --system-talk-name=org.freedesktop.login1
+  - --filesystem=xdg-run/pipewire-0
+  - --filesystem=xdg-run/gamescope-0
+  - --filesystem=host-os:ro
+  - --filesystem=xdg-download
+  - --filesystem=xdg-documents
+  - --filesystem=~/.steam/steam
+
+cleanup:
+  - /include
+  - /lib/cmake
+  - /lib/pkgconfig
+  - /share/doc
+  - /share/man
+  - '*.la'
+  - '*.a'
+cleanup-commands:
+  - /app/cleanup-BaseApp.sh
+
+build-options:
+  arch:
+    aarch64:
+      cflags: -O2 -march=armv8.2-a+fp16+dotprod+rcpc+crypto -mtune=cortex-a715
+      cxxflags: -O2 -march=armv8.2-a+fp16+dotprod+rcpc+crypto -mtune=cortex-a715
+      prepend-pkg-config-path: "/app/lib/pkgconfig:/app/lib64/pkgconfig:/app/lib/aarch64-linux-gnu/pkgconfig:/app/lib64/aarch64-linux-gnu/pkgconfig"
+    x86_64:
+      prepend-pkg-config-path: "/app/lib/pkgconfig:/app/lib64/pkgconfig:/app/lib/x86_64-linux-gnu/pkgconfig:/app/lib64/x86_64-linux-gnu/pkgconfig"
+
+modules:
+  - name: protobuf-compilers
+    buildsystem: cmake-ninja
+    config-opts:
+      - -Dprotobuf_BUILD_TESTS=OFF
+      - -Dprotobuf_BUILD_SHARED_LIBS=OFF
+      - -Dprotobuf_BUILD_PROTOBUF_BINARIES=ON
+      - -Dprotobuf_BUILD_EXAMPLES=OFF
+    cleanup:
+      - /include
+      - /lib/*.a
+      - /lib/cmake
+      - /lib/pkgconfig
+    sources:
+      - type: archive
+        url: https://github.com/protocolbuffers/protobuf/releases/download/v21.12/protobuf-cpp-3.21.12.tar.gz
+        sha256: 4eab9b524aa5913c6fffb20b2a8abf5ef7f95a80bc0701f3a6dbb4c607f73460
+
+  - name: libevent
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DCMAKE_POLICY_VERSION_MINIMUM=3.5
+      - -DEVENT__DISABLE_SAMPLES:BOOL=OFF
+      - -DEVENT__DISABLE_TESTS:BOOL=OFF
+    sources:
+      - type: git
+        url: https://github.com/libevent/libevent
+        tag: release-2.1.13-stable
+        commit: 79ddfb460847999b807cba76d04e73891f29c6ee
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+
+  - name: libplacebo
+    buildsystem: meson
+    config-opts:
+      - -Dvulkan=enabled
+      - -Dshaderc=enabled
+    cleanup:
+      - /include
+      - /lib/pkgconfig
+    sources:
+      - type: git
+        url: https://github.com/haasn/libplacebo
+        tag: v7.387.0
+        commit: 275f7dea27924cdd34ab2e6c20e448b6bc4fab65
+
+  - name: nv-codec-headers
+    only-arches:
+      - x86_64
+    buildsystem: simple
+    build-commands:
+      - make PREFIX=/app install
+    sources:
+      - type: git
+        url: https://github.com/FFmpeg/nv-codec-headers.git
+        tag: n13.1.15.0
+        commit: 0a6fba9a2820628b8103464f4c8753ee05838baa
+
+  - name: ffmpeg-x86_64
+    only-arches:
+      - x86_64
+    cleanup:
+      - /bin/ffmpeg
+      - /lib/*.so
+      - /include
+      - /lib/pkgconfig
+      - /share/ffmpeg/examples
+      - /share/ffmpeg
+    config-opts:
+      - --disable-all
+      - --enable-libdrm
+      - --enable-avcodec
+      - --enable-vulkan
+      - --enable-decoder=h264
+      - --enable-decoder=hevc
+      - --enable-decoder=h264_cuvid
+      - --enable-decoder=hevc_cuvid
+      - --enable-hwaccel=h264_vaapi
+      - --enable-hwaccel=hevc_vaapi
+      - --enable-hwaccel=h264_vulkan
+      - --enable-hwaccel=hevc_vulkan
+      - --enable-hwaccel=h264_nvdec
+      - --enable-hwaccel=hevc_nvdec
+      - --enable-cuvid
+      - --enable-nvdec
+      - --enable-ffnvcodec
+    sources:
+      - type: archive
+        url: https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz
+        sha256: 8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e
+      - type: patch
+        path: 0001-vulkan-ignore-frames-without-hw-context.patch
+
+  - name: ffmpeg-aarch64
+    only-arches:
+      - aarch64
+    cleanup:
+      - /bin/ffmpeg
+      - /lib/*.so
+      - /include
+      - /lib/pkgconfig
+      - /share/ffmpeg/examples
+      - /share/ffmpeg
+    config-opts:
+      - --disable-all
+      - --enable-libdrm
+      - --enable-avcodec
+      - --enable-vulkan
+      - --enable-decoder=h264
+      - --enable-decoder=hevc
+      - --enable-hwaccel=h264_vaapi
+      - --enable-hwaccel=hevc_vaapi
+      - --enable-hwaccel=h264_vulkan
+      - --enable-hwaccel=hevc_vulkan
+      # Rift Play: V4L2 mem2mem hw decoders (Qualcomm Iris/Venus on SM8550)
+      - --enable-v4l2-m2m
+      - --enable-decoder=h264_v4l2m2m
+      - --enable-decoder=hevc_v4l2m2m
+    sources:
+      - type: archive
+        url: https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz
+        sha256: 8c3850283eb25fa026482078a04051e0be17347b09ef81a0849bec15a96e002e
+      - type: patch
+        path: 0001-vulkan-ignore-frames-without-hw-context.patch
+
+  - python3-modules.yaml
+
+  - name: hidapi
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DHIDAPI_WITH_LIBUSB=FALSE
+    sources:
+      - type: git
+        url: https://github.com/libusb/hidapi.git
+        tag: hidapi-0.15.0
+        commit: d6b2a974608dec3b76fb1e36c189f22b9cf3650c
+    cleanup:
+      - /lib/*.la
+      - /lib/pkgconfig
+      - /include
+
+  - name: speexDSP
+    buildsystem: simple
+    build-commands:
+      - ./autogen.sh
+      - ./configure --prefix=/app
+      - make
+      - make install
+    sources:
+      - type: git
+        url: https://gitlab.xiph.org/xiph/speexdsp.git
+        tag: SpeexDSP-1.2.1
+        commit: 1b28a0f61bc31162979e1f26f3981fc3637095c8
+
+  - name: json-c
+    buildsystem: cmake-ninja
+    sources:
+      - type: git
+        url: https://github.com/json-c/json-c.git
+        tag: json-c-0.19-20260627
+        commit: aa716cd8d663c976b99b0f30f102ee1d8ef63146
+
+  - name: miniupnpc
+    buildsystem: cmake-ninja
+    subdir: miniupnpc
+    sources:
+    - type: git
+      url: https://github.com/miniupnp/miniupnp
+      tag: miniupnpc_2_3_3
+      commit: bf4215a7574f88aa55859db9db00e3ae58cf42d6
+
+  - name: SDL3
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DSDL_TESTS=OFF
+      - -DSDL_EXAMPLES=OFF
+      - -DCMAKE_INSTALL_LIBDIR=lib
+    sources:
+      - type: git
+        url: https://github.com/libsdl-org/SDL.git
+        tag: release-3.4.18
+        commit: 829a65d769d935c4852f8159e964312c0957260a
+
+  - name: sdl2-compat
+    sources:
+      - type: git
+        url: https://github.com/libsdl-org/sdl2-compat
+        tag: release-2.32.74
+        commit: e4df8a55f20da762290a78c2bbe8f8d89d01486a
+    buildsystem: cmake-ninja
+    config-opts:
+      - -DSDL2COMPAT_TESTS=OFF
+      - -DCMAKE_INSTALL_LIBDIR=lib
+    post-install:
+      - mv /app/lib/pkgconfig/sdl2-compat.pc /app/lib/pkgconfig/sdl2.pc
+
+  - name: vulkanso
+    buildsystem: simple
+    build-commands:
+      - ln -s /usr/lib/$(uname -m)-linux-gnu/libvulkan.so.1 /app/lib/libvulkan.so
+
+  - name: chiaki-ng
+    buildsystem: cmake-ninja
+    builddir: true
+    config-opts:
+      - -DCMAKE_BUILD_TYPE=Release
+      - -DCHIAKI_ENABLE_TESTS=OFF
+    sources:
+      - type: dir
+        path: ..
+        skip:
+          - .git
+          - .flatpak-builder
+          - build-dir
+          - repo
+          - dist
+    post-install:
+      - install -Dm755 ../scripts/psn-account-id.py /app/bin/psn-account-id
+      - install -Dm755 ../scripts/vulkan-gamescope-layers/VkLayer_FROG_gamescope_wsi.x86_64.json
+        /app/share/vulkan/implicit_layer.d/VkLayer_FROG_gamescope_wsi.x86_64.json
