@@ -1,9 +1,15 @@
-## Rift Play v0.2.1
+## Rift Play v0.3.0
 
-- **Animated home background**: flowing ribbons of light particles, plus a near-invisible micro-texture of tiny PlayStation-style symbols (like the grip of a controller). Can be turned off in Settings → *Animated Background*.
-- Rift Play violet accent color across the app (dialogs, buttons, highlights).
-- Cleaner background (no logo watermark).
+**Picture quality, made simple**
+- Presets with clear names: **Battery**, **Balanced**, **Sharp** (FSR / FSRCNNX GPU upscaling) and **Max / TV** (advanced FSRCNNX upscaling).
+- New **Picture** button in the swipe-down quick bar: switch preset during a stream, with an on-screen confirmation.
+- **Wi-Fi Saver** (Settings): streams at 720p and upscales to 1080p on the GPU. Smoother when the Wi-Fi is weak.
+- **TV Quality Boost** (Settings, on by default): automatically uses Max / TV upscaling when the handheld is connected to a 4K display.
 
-Includes everything from v0.2.0: console-style home screen, PS button with **Select + Start**, swipe-down touch quick bar (PS / Create / Options / Touchpad) during streams.
+**Update notifications**
+- The home screen shows an **Update to vX** button when a new version is released.
 
-Update: `flatpak install --user -y RiftPlay-aarch64.flatpak` — your registered consoles are kept.
+**Fixes**
+- Quieter animated background (no more log spam).
+
+Update: download `RiftPlay-aarch64.flatpak` and run `flatpak install --user -y RiftPlay-aarch64.flatpak` — your consoles and settings are kept.

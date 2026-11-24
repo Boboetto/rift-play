@@ -19,12 +19,18 @@ env:
 jobs:
   flatpak-aarch64:
     runs-on: ubuntu-24.04-arm
+    outputs:
+      has_key: ${{ steps.keycheck.outputs.has_key }}
     env:
       IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
       HAS_KEY: ${{ secrets.FLATPAK_GPG_KEY_ID != '' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Check signing key
+        id: keycheck
+        run: echo "has_key=$HAS_KEY" >> "$GITHUB_OUTPUT"
 
       - name: Install flatpak-builder
         run: |
@@ -131,7 +137,7 @@ jobs:
 
   deploy-updates:
     needs: flatpak-aarch64
-    if: startsWith(github.ref, 'refs/tags/v')
+    if: startsWith(github.ref, 'refs/tags/v') && needs.flatpak-aarch64.outputs.has_key == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
