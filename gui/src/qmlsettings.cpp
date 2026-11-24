@@ -897,6 +897,17 @@ void QmlSettings::setPsButtonCombo(uint combo)
     emit psButtonComboChanged();
 }
 
+bool QmlSettings::animatedBackground() const
+{
+    return settings->GetAnimatedBackground();
+}
+
+void QmlSettings::setAnimatedBackground(bool enabled)
+{
+    settings->SetAnimatedBackground(enabled);
+    emit animatedBackgroundChanged();
+}
+
 bool QmlSettings::touchQuickBarEnabled() const
 {
     return settings->GetTouchQuickBarEnabled();

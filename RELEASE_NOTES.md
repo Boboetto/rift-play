@@ -1,16 +1,9 @@
-## Rift Play v0.2.0
+## Rift Play v0.2.1
 
-**New home screen** — console-style launcher: big console tiles, status at a glance (on / rest mode / offline), pill buttons for Play, Wake up, PIN and Hide, controller hints at the bottom, clock in the top bar, and a guided screen when no console is found yet.
+- **Animated home background**: flowing ribbons of light particles, plus a near-invisible micro-texture of tiny PlayStation-style symbols (like the grip of a controller). Can be turned off in Settings → *Animated Background*.
+- Rift Play violet accent color across the app (dialogs, buttons, highlights).
+- Cleaner background (no logo watermark).
 
-**PS button on a handheld**
-- Hold **Select + Start** to press PS (works in Game Mode too, where Steam takes the Home button). Can be changed to L3 + R3 or turned off in Settings.
-- **Swipe down from the top of the screen** during a stream to open a quick bar with PS, Create, Options and touchpad click. Nothing is drawn on top of the stream until you swipe.
+Includes everything from v0.2.0: console-style home screen, PS button with **Select + Start**, swipe-down touch quick bar (PS / Create / Options / Touchpad) during streams.
 
-**Polish**
-- Rift Play artwork for the Steam shortcut created from the app
-- No more chiaki names in the window, process or messages
-- Version now shows the Rift Play version
-
-Update: download `RiftPlay-aarch64.flatpak` and run `flatpak install --user -y RiftPlay-aarch64.flatpak` (your registered consoles are kept).
-
-Tip: if controller vibration does not work in Game Mode, open Rift Play's controller settings in Steam and select **Disable Steam Input**.
+Update: `flatpak install --user -y RiftPlay-aarch64.flatpak` — your registered consoles are kept.

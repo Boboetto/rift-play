@@ -465,6 +465,8 @@ class Settings : public QObject
 		uint GetPsButtonCombo() const;
 		void SetPsButtonCombo(uint combo);
 		/** Rift Play: touch quick bar (tap top-center edge during stream) */
+		bool GetAnimatedBackground() const;
+		void SetAnimatedBackground(bool enabled);
 		bool GetTouchQuickBarEnabled() const;
 		void SetTouchQuickBarEnabled(bool enabled);
 

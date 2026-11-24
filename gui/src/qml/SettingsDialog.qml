@@ -762,11 +762,31 @@ DialogView {
                                 onToggled: Chiaki.settings.touchQuickBarEnabled = !Chiaki.settings.touchQuickBarEnabled
                                 KeyNavigation.priority: KeyNavigation.BeforeItem
                                 KeyNavigation.up: psButtonCombo
-                                KeyNavigation.down: touchQuickBar
+                                KeyNavigation.down: animatedBackground
                             }
                             Label {
                                 Layout.alignment: Qt.AlignRight
                                 text: qsTr("(swipe down from the top of the screen while streaming)")
+                            }
+                        }
+                        RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("Animated Background")
+                            }
+                            C.CheckBox {
+                                id: animatedBackground
+                                checked: Chiaki.settings.animatedBackground
+                                onToggled: Chiaki.settings.animatedBackground = !Chiaki.settings.animatedBackground
+                                KeyNavigation.priority: KeyNavigation.BeforeItem
+                                KeyNavigation.up: touchQuickBar
+                                KeyNavigation.down: animatedBackground
+                            }
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("(flowing particles on the home screen)")
                             }
                         }
                     }

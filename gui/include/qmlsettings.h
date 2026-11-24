@@ -91,6 +91,7 @@ class QmlSettings : public QObject
     Q_PROPERTY(uint dpadTouchShortcut4 READ dpadTouchShortcut4 WRITE setDpadTouchShortcut4 NOTIFY dpadTouchShortcut4Changed)
     Q_PROPERTY(bool streamMenuEnabled READ streamMenuEnabled WRITE setStreamMenuEnabled NOTIFY streamMenuEnabledChanged)
     Q_PROPERTY(uint psButtonCombo READ psButtonCombo WRITE setPsButtonCombo NOTIFY psButtonComboChanged)
+    Q_PROPERTY(bool animatedBackground READ animatedBackground WRITE setAnimatedBackground NOTIFY animatedBackgroundChanged)
     Q_PROPERTY(bool touchQuickBarEnabled READ touchQuickBarEnabled WRITE setTouchQuickBarEnabled NOTIFY touchQuickBarEnabledChanged)
     Q_PROPERTY(uint streamMenuShortcut1 READ streamMenuShortcut1 WRITE setStreamMenuShortcut1 NOTIFY streamMenuShortcut1Changed)
     Q_PROPERTY(uint streamMenuShortcut2 READ streamMenuShortcut2 WRITE setStreamMenuShortcut2 NOTIFY streamMenuShortcut2Changed)
@@ -574,6 +575,8 @@ public:
     void setStreamMenuEnabled(bool enabled);
     uint psButtonCombo() const;
     void setPsButtonCombo(uint combo);
+    bool animatedBackground() const;
+    void setAnimatedBackground(bool enabled);
     bool touchQuickBarEnabled() const;
     void setTouchQuickBarEnabled(bool enabled);
 
@@ -697,6 +700,7 @@ signals:
     void streamMenuEnabledChanged();
     void psButtonComboChanged();
     void touchQuickBarEnabledChanged();
+    void animatedBackgroundChanged();
     void streamMenuShortcut1Changed();
     void streamMenuShortcut2Changed();
     void streamMenuShortcut3Changed();

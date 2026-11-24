@@ -1055,6 +1055,16 @@ void Settings::SetPsButtonCombo(uint combo)
 	settings.setValue("settings/ps_button_combo", combo);
 }
 
+bool Settings::GetAnimatedBackground() const
+{
+	return settings.value("settings/animated_background", true).toBool();
+}
+
+void Settings::SetAnimatedBackground(bool enabled)
+{
+	settings.setValue("settings/animated_background", enabled);
+}
+
 bool Settings::GetTouchQuickBarEnabled() const
 {
 	return settings.value("settings/touch_quick_bar_enabled", true).toBool();

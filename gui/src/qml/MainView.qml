@@ -141,20 +141,25 @@ Pane {
             }
         }
 
+        // micro-texture of tiny PlayStation-style symbols (like the controller's
+        // grip texture): one tiled image, almost invisible unless you look closely
         Image {
-            anchors {
-                right: parent.right
-                bottom: parent.bottom
-                rightMargin: -parent.height * 0.08
-                bottomMargin: -parent.height * 0.12
-            }
-            width: parent.height * 0.75
-            height: width
-            sourceSize: Qt.size(width, height)
-            source: "qrc:/icons/chiaking-logo-white.svg"
-            fillMode: Image.PreserveAspectFit
-            opacity: 0.025
+            anchors.fill: parent
+            source: "qrc:/icons/shape-texture.svg"
+            sourceSize: Qt.size(72, 72)
+            fillMode: Image.Tile
+            smooth: true
+            opacity: 0.05
         }
+
+        // flowing particle ribbons (separate file: if the Particles module is
+        // missing the Loader simply stays empty and the home still works)
+        Loader {
+            anchors.fill: parent
+            source: Chiaki.settings.animatedBackground ? "RiftBackground.qml" : ""
+            onLoaded: item.running = Qt.binding(() => consolePane.visible && Qt.application.state === Qt.ApplicationActive)
+        }
+
     }
 
     // ---------- Top bar ----------
