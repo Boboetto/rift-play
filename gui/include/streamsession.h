@@ -33,6 +33,7 @@
 #include "settings.h"
 
 #include <QObject>
+#include <QSet>
 #include <QImage>
 #include <QMouseEvent>
 #include <QMutex>
@@ -76,6 +77,8 @@ class SdeckHapticsWorker;
 		AVBufferRef *hw_device_ctx;
 		QString audio_out_device;
 		QString audio_in_device;
+		uint32_t ps_button_combo = 0;
+		bool touch_quick_bar = true;
 		uint32_t log_level_mask;
 		bool log_sanitize = true;
 		QString log_file;
@@ -222,6 +225,9 @@ class StreamSession : public QObject
 		ChiakiControllerState keyboard_state;
 		ChiakiControllerState touch_state;
 		QMap<int, uint8_t> touch_tracker;
+		QSet<int> quick_bar_touch_ids;
+		uint32_t ps_button_combo_mask = 0;
+		bool touch_quick_bar_enabled = true;
 		int8_t mouse_touch_id;
 		ChiakiControllerState dpad_touch_state;
 		uint16_t dpad_touch_increment;
@@ -343,6 +349,8 @@ class StreamSession : public QObject
 		void Stop();
 		void GoToBed();
 	Q_INVOKABLE bool RequestIDR();
+	/** Rift Play: press and release a PS controller button (ChiakiControllerButton mask), e.g. from the touch quick bar */
+	Q_INVOKABLE void TapButton(int button);
 		void ToggleMute();
 		void SetLoginPIN(const QString &pin);
 		void GoHome();
@@ -393,6 +401,8 @@ class StreamSession : public QObject
 		void AutoRegistSucceeded(const ChiakiRegisteredHost &host);
 		void NicknameReceived(QString nickname);
 		void ConnectedChanged();
+		/** Rift Play: user tapped the top-center edge of the touch screen */
+		void QuickBarRequested();
 		void MeasuredBitrateChanged();
 		void AveragePacketLossChanged();
 		void FramesLostChanged();

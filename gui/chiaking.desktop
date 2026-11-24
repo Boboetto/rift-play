@@ -2,6 +2,6 @@
 Type=Application
 Name=Rift Play
 Comment=Remote play client for Retroid Pocket 6 (chiaki-ng fork)
-Exec=chiaki
+Exec=riftplay
 Icon=chiaking
 Categories=Game;Network;RemoteAccess;

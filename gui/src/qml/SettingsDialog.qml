@@ -622,7 +622,7 @@ DialogView {
                                 if(streamMenuShortcut1.visible)
                                     streamMenuShortcut1
                                 else
-                                    streamMenu
+                                    psButtonCombo
                             }
                         }
 
@@ -654,7 +654,7 @@ DialogView {
                                     KeyNavigation.AfterItem
                             }
                             KeyNavigation.up: streamMenu
-                            KeyNavigation.down: streamMenuShortcut1
+                            KeyNavigation.down: psButtonCombo
                             KeyNavigation.left: streamMenuShortcut1
                             KeyNavigation.right: streamMenuShortcut2
                         }
@@ -673,7 +673,7 @@ DialogView {
                                     KeyNavigation.AfterItem
                             }
                             KeyNavigation.up: streamMenu
-                            KeyNavigation.down: streamMenuShortcut2
+                            KeyNavigation.down: psButtonCombo
                             KeyNavigation.left: streamMenuShortcut1
                             KeyNavigation.right: streamMenuShortcut3
                         }
@@ -692,7 +692,7 @@ DialogView {
                                     KeyNavigation.AfterItem
                             }
                             KeyNavigation.up: streamMenu
-                            KeyNavigation.down: streamMenuShortcut3
+                            KeyNavigation.down: psButtonCombo
                             KeyNavigation.left: streamMenuShortcut2
                             KeyNavigation.right: streamMenuShortcut4
                         }
@@ -711,7 +711,7 @@ DialogView {
                                     KeyNavigation.AfterItem
                             }
                             KeyNavigation.up: streamMenu
-                            KeyNavigation.down: streamMenuShortcut4
+                            KeyNavigation.down: psButtonCombo
                             KeyNavigation.left: streamMenuShortcut3
                             KeyNavigation.right: streamMenuShortcut4
                         }
@@ -719,6 +719,54 @@ DialogView {
                             Label {
                                 Layout.alignment: Qt.AlignRight
                                 text: qsTr("(L1+R1+L3+R3)")
+                            }
+                        }
+                        RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("PS Button Combo:")
+                            }
+                            C.ComboBox {
+                                id: psButtonCombo
+                                implicitContentWidthPolicy: ComboBox.WidestText
+                                firstInFocusChain: false
+                                model: [qsTr("Off"), qsTr("Select + Start"), qsTr("L3 + R3")]
+                                currentIndex: Chiaki.settings.psButtonCombo
+                                onActivated: index => Chiaki.settings.psButtonCombo = index
+                                KeyNavigation.priority: {
+                                    if(!popup.visible)
+                                        KeyNavigation.BeforeItem
+                                    else
+                                        KeyNavigation.AfterItem
+                                }
+                                KeyNavigation.up: streamMenuShortcut1.visible ? streamMenuShortcut1 : streamMenu
+                                KeyNavigation.down: touchQuickBar
+                            }
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("(hold to press PS)")
+                            }
+                        }
+                        RowLayout {
+                            spacing: 10
+                            Layout.alignment: Qt.AlignHCenter
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("Touch Quick Bar")
+                            }
+                            C.CheckBox {
+                                id: touchQuickBar
+                                checked: Chiaki.settings.touchQuickBarEnabled
+                                onToggled: Chiaki.settings.touchQuickBarEnabled = !Chiaki.settings.touchQuickBarEnabled
+                                KeyNavigation.priority: KeyNavigation.BeforeItem
+                                KeyNavigation.up: psButtonCombo
+                                KeyNavigation.down: touchQuickBar
+                            }
+                            Label {
+                                Layout.alignment: Qt.AlignRight
+                                text: qsTr("(tap top-center of the screen while streaming)")
                             }
                         }
                     }

@@ -206,8 +206,8 @@ QString GetLogBaseDir()
 QString CreateLogFilename()
 {
 	static const QString date_format = "yyyy-MM-dd_HH-mm-ss-zzzzzz";
-	static const QString session_log_wildcard = "chiaki_session_*.log";
-	static const QRegularExpression session_log_regex("chiaki_session_(.*).log");
+	static const QString session_log_wildcard = "riftplay_session_*.log";
+	static const QRegularExpression session_log_regex("riftplay_session_(.*).log");
 
 	QString dir_str = GetLogBaseDir();
 	if(dir_str.isEmpty())
@@ -237,6 +237,6 @@ QString CreateLogFilename()
 		dir.remove(pair.first);
 	}
 
-	QString filename = "chiaki_session_" + QDateTime::currentDateTime().toString(date_format) + ".log";
+	QString filename = "riftplay_session_" + QDateTime::currentDateTime().toString(date_format) + ".log";
 	return dir.absoluteFilePath(filename);
 }

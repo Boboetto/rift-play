@@ -280,6 +280,13 @@ StreamSessionConnectInfo::StreamSessionConnectInfo(
 	hw_device_ctx = nullptr;
 	audio_out_device = settings->GetAudioOutDevice();
 	audio_in_device = settings->GetAudioInDevice();
+	switch(settings->GetPsButtonCombo())
+	{
+		case 1: ps_button_combo = CHIAKI_CONTROLLER_BUTTON_SHARE | CHIAKI_CONTROLLER_BUTTON_OPTIONS; break;
+		case 2: ps_button_combo = CHIAKI_CONTROLLER_BUTTON_L3 | CHIAKI_CONTROLLER_BUTTON_R3; break;
+		default: ps_button_combo = 0; break;
+	}
+	touch_quick_bar = settings->GetTouchQuickBarEnabled();
 	log_level_mask = settings->GetLogLevelMask();
 	log_sanitize = settings->GetLogSanitize();
 	audio_volume = settings->GetAudioVolume();
@@ -438,6 +445,8 @@ StreamSession::StreamSession(const StreamSessionConnectInfo &connect_info, QObje
 	audio_volume = connect_info.audio_volume;
 	start_mic_unmuted = connect_info.start_mic_unmuted;
 	audio_out_device_name = connect_info.audio_out_device;
+	ps_button_combo_mask = connect_info.ps_button_combo;
+	touch_quick_bar_enabled = connect_info.touch_quick_bar;
 	audio_in_device_name = connect_info.audio_in_device;
 
 	chiaki_opus_decoder_init(&opus_decoder, log.GetChiakiLog());
@@ -1022,6 +1031,16 @@ void StreamSession::HandleTouchEvent(QTouchEvent *event, qreal width, qreal heig
 				float norm_x = std::clamp(0.0, touchPoint.scenePosition().x() / width, 1.0);
 				float norm_y = std::clamp(0.0, touchPoint.scenePosition().y() / height, 1.0);
 
+				// Rift Play: a touch starting on the top-center edge opens the quick bar instead of the touchpad
+				if(quick_bar_touch_ids.contains(id))
+					break;
+				if(touch_quick_bar_enabled && touchPoint.state() == QEventPoint::State::Pressed
+					&& norm_y <= 0.06 && norm_x >= 0.35 && norm_x <= 0.65)
+				{
+					quick_bar_touch_ids.insert(id);
+					break;
+				}
+
 				// Touching edges of screen is a touchpad click
 				if(norm_x <= 0.05 || norm_x >= 0.95 || norm_y <= 0.05 || norm_y >= 0.95)
 					touch_state.buttons |= CHIAKI_CONTROLLER_BUTTON_TOUCHPAD;
@@ -1050,6 +1069,11 @@ void StreamSession::HandleTouchEvent(QTouchEvent *event, qreal width, qreal heig
 			}
 			case QEventPoint::State::Released:
 			{
+				if(quick_bar_touch_ids.remove(id))
+				{
+					emit QuickBarRequested();
+					break;
+				}
 				for(auto it=touch_tracker.begin(); it!=touch_tracker.end(); it++)
 				{
 					if(it.key() == id)
@@ -1320,6 +1344,16 @@ void StreamSession::DpadSendFeedbackState()
 	chiaki_session_set_controller_state(&session, &state);
 }
 
+void StreamSession::TapButton(int button)
+{
+	keyboard_state.buttons |= (uint32_t)button;
+	SendFeedbackState();
+	QTimer::singleShot(120, this, [this, button]() {
+		keyboard_state.buttons &= ~(uint32_t)button;
+		SendFeedbackState();
+	});
+}
+
 void StreamSession::SendFeedbackState()
 {
 	ChiakiControllerState state;
@@ -1373,6 +1407,10 @@ void StreamSession::SendFeedbackState()
 			dpad_touch_stop_timer->start(NEW_DPAD_TOUCH_INTERVAL_MS);
 	}
 	chiaki_controller_state_or(&state, &state, &dpad_touch_state);
+	// Rift Play: holding the configured combo sends the PS button instead
+	// (handhelds have no PS button, and Steam grabs Home in Game Mode).
+	if(ps_button_combo_mask && (state.buttons & ps_button_combo_mask) == ps_button_combo_mask)
+		state.buttons = (state.buttons & ~ps_button_combo_mask) | CHIAKI_CONTROLLER_BUTTON_PS;
 	chiaki_session_set_controller_state(&session, &state);
 }
 

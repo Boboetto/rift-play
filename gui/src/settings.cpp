@@ -1045,6 +1045,26 @@ void Settings::SetDpadTouchShortcut4(uint button) {
 	settings.setValue("settings/dpad_touch_shortcut4", button);
 }
 
+uint Settings::GetPsButtonCombo() const
+{
+	return settings.value("settings/ps_button_combo", 1).toUInt();
+}
+
+void Settings::SetPsButtonCombo(uint combo)
+{
+	settings.setValue("settings/ps_button_combo", combo);
+}
+
+bool Settings::GetTouchQuickBarEnabled() const
+{
+	return settings.value("settings/touch_quick_bar_enabled", true).toBool();
+}
+
+void Settings::SetTouchQuickBarEnabled(bool enabled)
+{
+	settings.setValue("settings/touch_quick_bar_enabled", enabled);
+}
+
 bool Settings::GetStreamMenuEnabled() const
 {
 	return settings.value("settings/stream_menu_enabled", true).toBool();

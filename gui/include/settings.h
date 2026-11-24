@@ -461,6 +461,13 @@ class Settings : public QObject
 		uint GetDpadTouchShortcut4() const;
 		void SetDpadTouchShortcut4(uint button);
 
+		/** Rift Play: button combo that sends the PS button (0 = off, 1 = Share+Options, 2 = L3+R3) */
+		uint GetPsButtonCombo() const;
+		void SetPsButtonCombo(uint combo);
+		/** Rift Play: touch quick bar (tap top-center edge during stream) */
+		bool GetTouchQuickBarEnabled() const;
+		void SetTouchQuickBarEnabled(bool enabled);
+
 		bool GetStreamMenuEnabled() const;
 		void SetStreamMenuEnabled(bool enabled);
 

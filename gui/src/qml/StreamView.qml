@@ -1302,4 +1302,163 @@ Item {
                 sessionLoading = false;
         }
     }
+
+    // ---------- Rift Play: touch quick bar ----------
+    // Tap the top-center edge of the screen while streaming to get the
+    // buttons a handheld lacks (PS, Create, Options, touchpad click).
+    Item {
+        id: quickBar
+        property bool open: false
+        readonly property bool available: !!Chiaki.session && Chiaki.settings.touchQuickBarEnabled && !useSeparateMenuWindow && !sessionLoading && !sessionError
+        anchors.fill: parent
+        visible: available
+        z: 1000
+
+        function show() {
+            if (open || !available)
+                return;
+            open = true;
+            view.grabInput(qbPs);
+            autoClose.restart();
+        }
+        function hide() {
+            if (!open)
+                return;
+            open = false;
+            autoClose.stop();
+            view.releaseInput();
+        }
+        function tap(mask, closeAfter) {
+            if (Chiaki.session)
+                Chiaki.session.TapButton(mask);
+            if (closeAfter)
+                hide();
+            else
+                autoClose.restart();
+        }
+
+        Connections {
+            target: Chiaki.session
+            ignoreUnknownSignals: true
+            function onQuickBarRequested() { quickBar.show(); }
+        }
+        Timer {
+            id: autoClose
+            interval: 6000
+            onTriggered: quickBar.hide()
+        }
+
+        // discoverability handle
+        Rectangle {
+            id: qbHandle
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 8
+            width: 120
+            height: 6
+            radius: 3
+            color: "white"
+            visible: !quickBar.open
+            opacity: hintTimer.running ? 0.7 : 0.18
+            Behavior on opacity { NumberAnimation { duration: 800 } }
+            Timer {
+                id: hintTimer
+                interval: 6000
+                running: quickBar.available
+            }
+        }
+
+        // dim the stream slightly while open (and close on tap outside)
+        Rectangle {
+            anchors.fill: parent
+            color: "black"
+            opacity: quickBar.open ? 0.35 : 0
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: 180 } }
+            MouseArea {
+                anchors.fill: parent
+                enabled: quickBar.open
+                onClicked: quickBar.hide()
+            }
+        }
+
+        Rectangle {
+            id: qbPanel
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: quickBar.open ? 22 : -height - 20
+            Behavior on y { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
+            width: qbRow.implicitWidth + 40
+            height: 112
+            radius: 56
+            color: Qt.rgba(0.06, 0.05, 0.13, 0.92)
+            border.width: 1
+            border.color: Qt.rgba(1, 1, 1, 0.14)
+
+            FocusScope {
+                anchors.fill: parent
+                focus: quickBar.open
+                Keys.onEscapePressed: quickBar.hide()
+                Keys.onMenuPressed: quickBar.hide()
+
+                Row {
+                    id: qbRow
+                    anchors.centerIn: parent
+                    spacing: 14
+
+                    QuickButton { id: qbPs; label: "PS"; caption: qsTr("Home"); big: true; onTriggered: quickBar.tap(32768, true); KeyNavigation.right: qbCreate }
+                    QuickButton { id: qbCreate; label: "\u25A4"; caption: qsTr("Create"); onTriggered: quickBar.tap(8192, false); KeyNavigation.left: qbPs; KeyNavigation.right: qbOptions }
+                    QuickButton { id: qbOptions; label: "\u2261"; caption: qsTr("Options"); onTriggered: quickBar.tap(4096, false); KeyNavigation.left: qbCreate; KeyNavigation.right: qbTouch }
+                    QuickButton { id: qbTouch; label: "\u25AD"; caption: qsTr("Touchpad"); onTriggered: quickBar.tap(16384, false); KeyNavigation.left: qbOptions; KeyNavigation.right: qbClose }
+                    QuickButton { id: qbClose; label: "\u2715"; caption: qsTr("Close"); KeyNavigation.left: qbTouch; onTriggered: quickBar.hide() }
+                }
+            }
+        }
+    }
+
+    component QuickButton: Item {
+        id: qb
+        property string label
+        property string caption
+        property bool big: false
+        signal triggered()
+        width: 84
+        height: 96
+        activeFocusOnTab: true
+        Keys.onReturnPressed: activate()
+        Keys.onSpacePressed: activate()
+        function activate() { triggered(); }
+
+        Rectangle {
+            id: qbCircle
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: 4
+            width: qb.big ? 68 : 58
+            height: width
+            radius: width / 2
+            color: qbMouse.pressed ? Qt.rgba(1, 1, 1, 0.35) : (qb.activeFocus ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(1, 1, 1, 0.10))
+            border.width: qb.activeFocus ? 3 : (qb.big ? 2 : 0)
+            border.color: qb.activeFocus ? "white" : "#b48cff"
+            scale: qbMouse.pressed ? 0.92 : 1
+            Behavior on scale { NumberAnimation { duration: 90 } }
+            Label {
+                anchors.centerIn: parent
+                text: qb.label
+                font.pixelSize: qb.big ? 24 : 26
+                font.weight: Font.Bold
+                color: "white"
+            }
+        }
+        Label {
+            anchors.horizontalCenter: parent.horizontalCenter
+            anchors.top: qbCircle.bottom
+            anchors.topMargin: 4
+            text: qb.caption
+            font.pixelSize: 13
+            color: Qt.rgba(1, 1, 1, 0.75)
+        }
+        MouseArea {
+            id: qbMouse
+            anchors.fill: parent
+            onClicked: qb.activate()
+        }
+    }
 }

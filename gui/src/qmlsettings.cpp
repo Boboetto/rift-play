@@ -886,6 +886,28 @@ void QmlSettings::setDpadTouchShortcut4(uint button) {
     emit dpadTouchShortcut4Changed();
 }
 
+uint QmlSettings::psButtonCombo() const
+{
+    return settings->GetPsButtonCombo();
+}
+
+void QmlSettings::setPsButtonCombo(uint combo)
+{
+    settings->SetPsButtonCombo(combo);
+    emit psButtonComboChanged();
+}
+
+bool QmlSettings::touchQuickBarEnabled() const
+{
+    return settings->GetTouchQuickBarEnabled();
+}
+
+void QmlSettings::setTouchQuickBarEnabled(bool enabled)
+{
+    settings->SetTouchQuickBarEnabled(enabled);
+    emit touchQuickBarEnabledChanged();
+}
+
 bool QmlSettings::streamMenuEnabled() const
 {
     return settings->GetStreamMenuEnabled();

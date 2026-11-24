@@ -4,7 +4,7 @@ runtime-version: '6.11'
 sdk: org.kde.Sdk
 base: io.qt.qtwebengine.BaseApp
 base-version: '6.11'
-command: chiaki
+command: riftplay
 rename-icon: chiaking
 rename-desktop-file: chiaking.desktop
 separate-locales: false
@@ -268,6 +268,8 @@ modules:
           - repo
           - dist
     post-install:
+      # launch through a "riftplay" name so process / X11 window class are not "chiaki"
+      - ln -sf chiaki /app/bin/riftplay
       - install -Dm755 ../scripts/psn-account-id.py /app/bin/psn-account-id
       - install -Dm755 ../scripts/vulkan-gamescope-layers/VkLayer_FROG_gamescope_wsi.x86_64.json
         /app/share/vulkan/implicit_layer.d/VkLayer_FROG_gamescope_wsi.x86_64.json
