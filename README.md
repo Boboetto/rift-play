@@ -69,6 +69,14 @@ Rift Play is a remote play client built specifically for that combination.
 
 **Recommended settings:** Hardware decoder: `auto` · Renderer: Vulkan · Resolution: 1080p · FPS: 60.
 
+### Steam Deck (experimental)
+
+There is also an x86_64 build for the Steam Deck: same steps as above, but download
+`RiftPlay-x86_64.flatpak` and install it in Desktop Mode with
+`flatpak install --user RiftPlay-x86_64.flatpak`. It decodes through VA-API on the Deck's
+AMD GPU (the Snapdragon tuning only applies to the RP6 build). The x86_64 bundle does not
+update through `flatpak update` yet: install the new bundle from each release.
+
 ### Reporting a problem
 
 Start a stream, close it, then attach the newest file from the `log` folder under
