@@ -48,6 +48,9 @@ build-options:
       cxxflags: -O2 -march=armv8.2-a+fp16+dotprod+rcpc+crypto -mtune=cortex-a715
       prepend-pkg-config-path: "/app/lib/pkgconfig:/app/lib64/pkgconfig:/app/lib/aarch64-linux-gnu/pkgconfig:/app/lib64/aarch64-linux-gnu/pkgconfig"
     x86_64:
+      # Steam Deck (Zen 2) and x86 PCs from ~2015 on (AVX2/FMA/BMI2)
+      cflags: -O2 -march=x86-64-v3 -mtune=znver2
+      cxxflags: -O2 -march=x86-64-v3 -mtune=znver2
       prepend-pkg-config-path: "/app/lib/pkgconfig:/app/lib64/pkgconfig:/app/lib/x86_64-linux-gnu/pkgconfig:/app/lib64/x86_64-linux-gnu/pkgconfig"
 
 modules:

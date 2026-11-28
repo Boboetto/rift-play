@@ -1,9 +1,11 @@
-name: Build Rift Play (aarch64 Flatpak)
+name: Build Rift Play (aarch64 + x86_64 Flatpak)
 
 on:
   push:
     branches: [main]
-    tags: ['v*']
+    # v*      -> ARM (RP6) release + update repo
+    # deck-v* -> x86_64 (Steam Deck / PC) release
+    tags: ['v*', 'deck-v*']
   pull_request:
   workflow_dispatch:
 
@@ -18,6 +20,7 @@ env:
 
 jobs:
   flatpak-aarch64:
+    if: github.ref_type != 'tag' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-24.04-arm
     outputs:
       has_key: ${{ steps.keycheck.outputs.has_key }}
@@ -58,9 +61,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/fb-state
-          key: fb-${{ hashFiles('flatpak/**') }}-${{ github.sha }}
+          key: fb-aarch64-${{ hashFiles('flatpak/**') }}-${{ github.sha }}
           restore-keys: |
-            fb-${{ hashFiles('flatpak/**') }}-
+            fb-aarch64-${{ hashFiles('flatpak/**') }}-
 
       - name: Build
         run: |
@@ -134,6 +137,67 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: site
+
+  # Steam Deck / x86_64 PCs. Uses the VA-API path (AMD GPU) from the shared
+  # manifest; the Snapdragon-only tuning and V4L2 decoders are aarch64-only.
+  # Released separately from the ARM build via deck-v* tags. This bundle carries
+  # no update repo URL (the GitHub Pages repo is aarch64 only), so updates are
+  # done by installing the new bundle.
+  flatpak-x86_64:
+    if: github.ref_type != 'tag' || startsWith(github.ref, 'refs/tags/deck-v')
+    runs-on: ubuntu-24.04
+    env:
+      IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/deck-v') }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install flatpak-builder
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+
+      - name: Install runtimes
+        run: |
+          flatpak remote-add --user --if-not-exists flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+          flatpak install --user -y --noninteractive flathub \
+            org.kde.Sdk//6.11 org.kde.Platform//6.11 io.qt.qtwebengine.BaseApp//6.11
+
+      - name: Cache flatpak-builder modules
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/fb-state
+          key: fb-x86_64-${{ hashFiles('flatpak/**') }}-${{ github.sha }}
+          restore-keys: |
+            fb-x86_64-${{ hashFiles('flatpak/**') }}-
+
+      - name: Build
+        run: |
+          flatpak-builder --user --force-clean --disable-rofiles-fuse \
+            --state-dir="$RUNNER_TEMP/fb-state" --repo="$RUNNER_TEMP/repo" \
+            "$RUNNER_TEMP/build-dir" flatpak/io.github.riftplay.RiftPlay.yaml
+
+      - name: Bundle
+        run: |
+          flatpak build-bundle "$RUNNER_TEMP/repo" RiftPlay-x86_64.flatpak "$APP_ID" \
+            --runtime-repo=https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RiftPlay-x86_64.flatpak
+          path: RiftPlay-x86_64.flatpak
+          if-no-files-found: error
+
+      - name: Publish release
+        if: env.IS_RELEASE == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # --latest=false keeps /releases/latest pointing at the ARM (RP6) release
+          gh release upload "${GITHUB_REF_NAME}" RiftPlay-x86_64.flatpak --clobber \
+            || gh release create "${GITHUB_REF_NAME}" RiftPlay-x86_64.flatpak --latest=false \
+                 --title "Rift Play Deck ${GITHUB_REF_NAME#deck-}" --notes-file RELEASE_NOTES_DECK.md
 
   deploy-updates:
     needs: flatpak-aarch64

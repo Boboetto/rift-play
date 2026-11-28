@@ -26,6 +26,7 @@ class RiftUpdater : public QObject
     Q_PROPERTY(QString latestVersion READ latestVersion NOTIFY stateChanged)
     Q_PROPERTY(QString error READ error NOTIFY stateChanged)
     Q_PROPERTY(QString currentVersion READ currentVersion CONSTANT)
+    Q_PROPERTY(QString bundleName READ bundleName CONSTANT)
 
 public:
     explicit RiftUpdater(QObject *parent = nullptr);
@@ -40,6 +41,8 @@ public:
     QString latestVersion() const { return latest_version; }
     QString error() const { return error_message; }
     QString currentVersion() const;
+    /** Flatpak bundle for this build: RiftPlay-aarch64.flatpak or RiftPlay-x86_64.flatpak */
+    QString bundleName() const;
 
     /** Install the update through the Flatpak portal. */
     Q_INVOKABLE void install();

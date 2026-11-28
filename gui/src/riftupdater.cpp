@@ -1,6 +1,7 @@
 #include "riftupdater.h"
 
 #include <QCoreApplication>
+#include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QLoggingCategory>
@@ -24,7 +25,17 @@ static const char *PORTAL_SERVICE = "org.freedesktop.portal.Flatpak";
 static const char *PORTAL_PATH = "/org/freedesktop/portal/Flatpak";
 static const char *PORTAL_IFACE = "org.freedesktop.portal.Flatpak";
 static const char *MONITOR_IFACE = "org.freedesktop.portal.Flatpak.UpdateMonitor";
-static const char *GITHUB_LATEST = "https://api.github.com/repos/Boboetto/rift-play/releases/latest";
+// ARM (RP6) and x86_64 (Steam Deck / PC) are released separately:
+// v* tags are the ARM build (and GitHub's "latest" release), deck-v* tags the x86_64 build.
+#if defined(__x86_64__)
+static const char *GITHUB_RELEASES = "https://api.github.com/repos/Boboetto/rift-play/releases?per_page=30";
+static const char *RELEASE_TAG_PREFIX = "deck-v";
+static const char *BUNDLE_NAME = "RiftPlay-x86_64.flatpak";
+#else
+static const char *GITHUB_RELEASES = "https://api.github.com/repos/Boboetto/rift-play/releases/latest";
+static const char *RELEASE_TAG_PREFIX = "v";
+static const char *BUNDLE_NAME = "RiftPlay-aarch64.flatpak";
+#endif
 
 RiftUpdater::RiftUpdater(QObject *parent)
     : QObject(parent)
@@ -34,6 +45,11 @@ RiftUpdater::RiftUpdater(QObject *parent)
 QString RiftUpdater::currentVersion() const
 {
     return QCoreApplication::applicationVersion();
+}
+
+QString RiftUpdater::bundleName() const
+{
+    return QString::fromLatin1(BUNDLE_NAME);
 }
 
 void RiftUpdater::start()
@@ -131,7 +147,7 @@ void RiftUpdater::checkGitHub()
 {
     if (!network)
         network = new QNetworkAccessManager(this);
-    QNetworkRequest req{QUrl(GITHUB_LATEST)};
+    QNetworkRequest req{QUrl(GITHUB_RELEASES)};
     req.setRawHeader("Accept", "application/vnd.github+json");
     req.setRawHeader("User-Agent", "RiftPlay-Updater");
     QNetworkReply *reply = network->get(req);
@@ -139,10 +155,25 @@ void RiftUpdater::checkGitHub()
         reply->deleteLater();
         if (reply->error() != QNetworkReply::NoError)
             return;
-        const QJsonObject obj = QJsonDocument::fromJson(reply->readAll()).object();
-        QString tag = obj.value("tag_name").toString();
-        if (tag.startsWith('v'))
-            tag.remove(0, 1);
+        const QJsonDocument doc = QJsonDocument::fromJson(reply->readAll());
+        const QString prefix = QString::fromLatin1(RELEASE_TAG_PREFIX);
+        QString tag;
+        if (doc.isArray()) {
+            // newest first: take the first published release of this build
+            for (const QJsonValue &v : doc.array()) {
+                const QJsonObject rel = v.toObject();
+                const QString t = rel.value("tag_name").toString();
+                if (!rel.value("draft").toBool() && t.startsWith(prefix)) {
+                    tag = t;
+                    break;
+                }
+            }
+        } else {
+            tag = doc.object().value("tag_name").toString();
+        }
+        if (!tag.startsWith(prefix))
+            return;
+        tag.remove(0, prefix.size());
         if (tag.isEmpty())
             return;
         latest_version = tag;

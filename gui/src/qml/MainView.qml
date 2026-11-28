@@ -251,7 +251,7 @@ Pane {
                             root.showConfirmDialog(qsTr("Update Rift Play"), qsTr("Download and install the new version now?\nYou can keep using the app while it downloads."), () => up.install());
                     } else {
                         root.showInfoDialog(qsTr("New version available"),
-                            qsTr("Rift Play v%1 is available.\n\nDownload RiftPlay-aarch64.flatpak from:\ngithub.com/Boboetto/rift-play/releases\n\nthen in Desktop Mode → Konsole run:\nflatpak install --user -y RiftPlay-aarch64.flatpak\n\nYour consoles and settings are kept.").arg(up.latestVersion));
+                            qsTr("Rift Play v%1 is available.\n\nDownload %2 from:\ngithub.com/Boboetto/rift-play/releases\n\nthen in Desktop Mode → Konsole run:\nflatpak install --user -y %2\n\nYour consoles and settings are kept.").arg(up.latestVersion).arg(up.bundleName));
                     }
                 }
             }
